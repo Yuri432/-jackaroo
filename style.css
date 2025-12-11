@@ -135,8 +135,35 @@ h1 {
     border-radius: 5px;
 }
 
-/* ******************************************************
-   *** NOTE: โค้ดนี้ยังไม่รวมการจัดวางตำแหน่ง Home/Safety สำหรับทุกสี
-   *** เนื่องจากต้องใช้ CSS ที่ซับซ้อนในการกำหนดพิกัด 
-   *** แต่โครงสร้างพื้นฐานสำหรับเกมใช้งานได้แล้ว
-   ****************************************************** */
+/* ==========================================================
+   POSITIONING ZONES (Red and Blue)
+   ========================================================== */
+
+/* --- RED PLAYER ZONES (Start at space-0, moves clockwise) --- */
+.home-red:nth-child(53) { top: 200px; left: 450px; }
+.home-red:nth-child(54) { top: 200px; left: 490px; }
+.home-red:nth-child(55) { top: 240px; left: 450px; }
+.home-red:nth-child(56) { top: 240px; left: 490px; }
+.home-red { background-color: rgba(255, 0, 0, 0.2); } 
+
+.safety-red { background-color: rgba(255, 0, 0, 0.4); border-color: red; }
+.safety-red:nth-child(57) { top: 50%; right: 100px; transform: translateY(-50%); } 
+.safety-red:nth-child(58) { top: 50%; right: 140px; transform: translateY(-50%); } 
+.safety-red:nth-child(59) { top: 50%; right: 180px; transform: translateY(-50%); } 
+.safety-red:nth-child(60) { top: 50%; right: 220px; transform: translateY(-50%); } 
+.safety-red:nth-child(61) { top: 50%; right: 260px; transform: translateY(-50%); } 
+
+
+/* --- BLUE PLAYER ZONES (Start at space-13, moves clockwise) --- */
+.home-blue { background-color: rgba(0, 0, 255, 0.2); }
+.home-blue:nth-child(62) { top: 50px; left: 200px; }
+.home-blue:nth-child(63) { top: 50px; left: 240px; }
+.home-blue:nth-child(64) { top: 90px; left: 200px; }
+.home-blue:nth-child(65) { top: 90px; left: 240px; }
+
+.safety-blue { background-color: rgba(0, 0, 255, 0.4); border-color: blue; }
+.safety-blue:nth-child(66) { top: 100px; left: 50%; transform: translateX(-50%); } 
+.safety-blue:nth-child(67) { top: 140px; left: 50%; transform: translateX(-50%); } 
+.safety-blue:nth-child(68) { top: 180px; left: 50%; transform: translateX(-50%); } 
+.safety-blue:nth-child(69) { top: 220px; left: 50%; transform: translateX(-50%); } 
+.safety-blue:nth-child(70) { top: 260px; left: 50%; transform: translateX(-50%); }
