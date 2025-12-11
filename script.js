@@ -1,5 +1,5 @@
 // ==========================================================
-// JACKAROO GAME LOGIC (script.js) - FINAL VERSION with Safety Zone Logic
+// JACKAROO GAME LOGIC (script.js) - FINAL VERSION with 4 Players and Enhanced Basic AI
 // ==========================================================
 
 const gameBoard = document.getElementById('game-board');
@@ -10,8 +10,9 @@ const currentPlayerDisplay = document.getElementById('current-player');
 const totalSpaces = 52; 
 const boardRadius = 250; 
 const centerOffset = 300; 
-const PLAYER_COLORS = ['Red', 'Blue']; 
-const AI_PLAYER = 'Blue'; 
+// *** CHANGED: Added Green and Yellow for 4-Player Structure ***
+const PLAYER_COLORS = ['Red', 'Blue', 'Green', 'Yellow']; 
+const AI_PLAYER = 'Blue'; // AI still controls only Blue for simplicity
 
 let currentPlayer = 'Red';
 let currentRoll = 0;
@@ -35,7 +36,6 @@ function createHomesAndSafetyZones() {
     PLAYER_COLORS.forEach(color => {
         const lowerColor = color.toLowerCase();
         
-        // 1. สร้างรัง (Home Base) 4 ช่อง
         for (let i = 0; i < 4; i++) {
             const homeSpace = document.createElement('div');
             homeSpace.classList.add('home-space', `home-${lowerColor}`);
@@ -43,7 +43,6 @@ function createHomesAndSafetyZones() {
             homeContainer.appendChild(homeSpace);
         }
 
-        // 2. สร้างเส้นทางปลอดภัย (Safety Zone) 5 ช่อง
         for (let i = 0; i < 5; i++) {
             const safetySpace = document.createElement('div');
             safetySpace.classList.add('safety-space', `safety-${lowerColor}`);
@@ -53,7 +52,6 @@ function createHomesAndSafetyZones() {
         }
     });
 
-    // 3. สร้างจุดจบ (Finish/Goal)
     const goal = document.createElement('div');
     goal.id = 'game-goal';
     goal.textContent = 'GOAL';
@@ -203,7 +201,6 @@ function moveMarble(marble, roll) {
         // ** 1. ตรวจสอบการเข้า Safety Zone **
         
         // ตรวจสอบว่าหมากเดินข้าม/ถึงช่องเริ่มต้นของตัวเอง (Start Space) หรือไม่
-        // ตรรกะนี้จัดการการข้ามช่องเริ่มต้นของตัวเองเพื่อเข้า Safety Zone
         const passedStart = (currentSpaceIndex < startSpaceIndex && finalTargetIndex >= startSpaceIndex) || (startSpaceIndex === 0 && finalTargetIndex >= totalSpaces);
         
         if (passedStart) {
@@ -212,7 +209,6 @@ function moveMarble(marble, roll) {
             let rollIntoSafety;
             
             if (distancePastStart >= totalSpaces) {
-                // กรณี Start=0 และเดินเกิน 52
                 rollIntoSafety = finalTargetIndex - totalSpaces;
             } else {
                  rollIntoSafety = distancePastStart;
@@ -271,6 +267,7 @@ function switchPlayer() {
     
     currentPlayerDisplay.textContent = `Current Player: ${currentPlayer}`;
     
+    // AI controls Blue only
     if (currentPlayer === AI_PLAYER) {
         setTimeout(handleAIMove, 1000); 
     } else {
@@ -300,8 +297,7 @@ function highlightPossibleMoves(roll, color) {
     const playerMarbles = document.querySelectorAll(`.marble-${color.toLowerCase()}`);
     
     playerMarbles.forEach(marble => {
-        // เพื่อความง่าย เราอนุญาตให้คลิกได้ ถ้าไม่ใช่หมากในบ้านแต่ Roll ไม่ได้ 1/6
-        
+        // Simple highlight (moveMarble() handles actual validity)
         marble.classList.add('can-move');
         marble.addEventListener('click', handleMarbleClick);
         hasMove = true; 
@@ -339,20 +335,21 @@ function handleMarbleClick(event) {
 
 
 // ----------------------------------------------------------
-// 3. AI LOGIC FUNCTIONS
+// 3. AI LOGIC FUNCTIONS (Enhanced Basic AI)
 // ----------------------------------------------------------
 
 function handleAIMove() {
     currentRoll = Math.floor(Math.random() * 6) + 1;
     rollResult.textContent = `Dice Roll (AI): ${currentRoll}`;
     
-    const possibleMoves = getAIMoves(currentRoll, AI_PLAYER.toLowerCase());
+    const possibleMarbles = getAIMoves(currentRoll, AI_PLAYER.toLowerCase());
     
-    if (possibleMoves.length > 0) {
-        const bestMarble = selectBestAIMarble(possibleMoves);
+    if (possibleMarbles.length > 0) {
+        const bestMarble = selectBestAIMarble(possibleMarbles);
         
         setTimeout(() => {
-            moveMarble(bestMarble, currentRoll);
+            // We must re-run moveMarble as the final validation
+            moveMarble(bestMarble, currentRoll); 
             switchPlayer();
         }, 1000); 
     } else {
@@ -378,37 +375,51 @@ function getAIMoves(roll, color) {
 function selectBestAIMarble(possibleMoves) {
     let bestMarble = null;
     let bestScore = -Infinity;
+    const color = AI_PLAYER.toLowerCase();
     
     possibleMoves.forEach(marble => {
         let score = 0;
         const currentPos = marble.getAttribute('data-position');
         const roll = currentRoll;
         
-        // AI STRATEGY (Basic):
+        // --- 1. Priority 1: EATING (New simple check) ---
+        if (currentPos.startsWith('space-')) {
+            const currentSpaceIndex = parseInt(currentPos.split('-')[1]);
+            let newIndex = (currentSpaceIndex + roll) % totalSpaces;
+            const targetSpace = document.getElementById(`space-${newIndex}`);
+            
+            if (targetSpace && targetSpace.children.length > 0) {
+                const existingMarble = targetSpace.children[0];
+                const existingMarbleColor = existingMarble.getAttribute('data-color');
+                if (existingMarbleColor !== color) {
+                    score += 5000; // High score for eating
+                }
+            }
+        }
         
-        // 1. Priority 1: พยายามออกจากบ้าน (สำคัญที่สุด)
+        // --- 2. Priority 2: Leaving Home ---
         if (currentPos.startsWith('home-') && (roll === 1 || roll === 6)) {
             score += 1000; 
         }
         
-        // 2. Priority 2: พยายามเข้า Safety Zone
+        // --- 3. Priority 3: Entering Safety Zone ---
         if (currentPos.startsWith('space-')) {
             const currentSpaceIndex = parseInt(currentPos.split('-')[1]);
             const startSpaceIndex = START_POSITIONS[AI_PLAYER.toLowerCase()];
             const distanceToStart = (startSpaceIndex - currentSpaceIndex + totalSpaces) % totalSpaces;
 
             if (distanceToStart === roll) {
-                score += 500; // จะเข้า Safety Zone พอดี
+                score += 500; // Will enter Safety Zone exactly
             }
         }
         
-        // 3. Priority 3: เดินหมากที่อยู่ไกลที่สุด
+        // --- 4. Priority 4: Moving Furthest on Track ---
         if (currentPos.startsWith('space-')) {
             const currentSpaceIndex = parseInt(currentPos.split('-')[1]);
             score += currentSpaceIndex;
         }
         
-        // 4. Priority 4: พยายามเดินใน Safety Zone
+        // --- 5. Priority 5: Moving in Safety Zone ---
         if (currentPos.startsWith('safety-')) {
             const currentSafetyIndex = parseInt(currentPos.split('-')[2]);
             score += 200 + currentSafetyIndex;
