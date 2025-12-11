@@ -1,5 +1,5 @@
 // ==========================================================
-// JACKAROO GAME LOGIC (script.js) - FINAL VERSION with BASIC AI
+// JACKAROO GAME LOGIC (script.js) - FINAL VERSION with Safety Zone Logic
 // ==========================================================
 
 const gameBoard = document.getElementById('game-board');
@@ -10,7 +10,7 @@ const currentPlayerDisplay = document.getElementById('current-player');
 const totalSpaces = 52; 
 const boardRadius = 250; 
 const centerOffset = 300; 
-const PLAYER_COLORS = ['Red', 'Blue']; // Red is Human, Blue is AI
+const PLAYER_COLORS = ['Red', 'Blue']; 
 const AI_PLAYER = 'Blue'; 
 
 let currentPlayer = 'Red';
@@ -26,7 +26,7 @@ const START_POSITIONS = {
 
 
 // ----------------------------------------------------------
-// 1. BOARD SETUP FUNCTIONS
+// 1. BOARD SETUP FUNCTIONS ( unchanged from last full version )
 // ----------------------------------------------------------
 
 function createHomesAndSafetyZones() {
@@ -35,7 +35,6 @@ function createHomesAndSafetyZones() {
     PLAYER_COLORS.forEach(color => {
         const lowerColor = color.toLowerCase();
         
-        // 1. สร้างรัง (Home Base) 4 ช่อง
         for (let i = 0; i < 4; i++) {
             const homeSpace = document.createElement('div');
             homeSpace.classList.add('home-space', `home-${lowerColor}`);
@@ -43,7 +42,6 @@ function createHomesAndSafetyZones() {
             homeContainer.appendChild(homeSpace);
         }
 
-        // 2. สร้างเส้นทางปลอดภัย (Safety Zone) 5 ช่อง
         for (let i = 0; i < 5; i++) {
             const safetySpace = document.createElement('div');
             safetySpace.classList.add('safety-space', `safety-${lowerColor}`);
@@ -53,7 +51,6 @@ function createHomesAndSafetyZones() {
         }
     });
 
-    // 3. สร้างจุดจบ (Finish/Goal)
     const goal = document.createElement('div');
     goal.id = 'game-goal';
     goal.textContent = 'GOAL';
@@ -132,11 +129,63 @@ function sendMarbleHome(marble) {
     }
 }
 
+function checkWinCondition(winningColor) {
+    const marblesInGoal = document.querySelectorAll(`#game-goal .marble-${winningColor.toLowerCase()}`).length;
+
+    if (marblesInGoal === 4) {
+        alert(`🎉 CONGRATULATIONS! Player ${winningColor} has won the game!`);
+        diceButton.disabled = true;
+    }
+}
+
+function moveIntoSafety(marble, roll) {
+    const currentPos = marble.getAttribute('data-position');
+    const color = marble.getAttribute('data-color');
+    
+    if (currentPos.startsWith('safety-')) {
+        const currentSafetyIndex = parseInt(currentPos.split('-')[2]);
+        const newSafetyIndex = currentSafetyIndex + roll;
+
+        if (newSafetyIndex === 5) {
+            // เดินเข้า Goal
+            const goalSpace = document.getElementById('game-goal');
+            goalSpace.appendChild(marble);
+            marble.setAttribute('data-position', 'goal');
+            marble.removeEventListener('click', handleMarbleClick);
+            
+            checkWinCondition(color);
+            return true;
+            
+        } else if (newSafetyIndex > 5) {
+            // เดินเลย Goal (ไม่เดิน)
+            return false;
+            
+        } else {
+            // เดินต่อใน Safety Zone
+            const newSafetyId = `safety-${color}-${newSafetyIndex}`;
+            const newSafetySpace = document.getElementById(newSafetyId);
+            
+            // ตรวจสอบหมากฝ่ายเดียวกัน (ป้องกันการเดินทับ)
+            if (newSafetySpace.children.length > 0) return false; 
+            
+            newSafetySpace.appendChild(marble);
+            marble.setAttribute('data-position', newSafetyId);
+            return true;
+        }
+    }
+    return false;
+}
+
 function moveMarble(marble, roll) {
     const currentPos = marble.getAttribute('data-position');
     const color = marble.getAttribute('data-color');
     const startSpaceIndex = START_POSITIONS[color];
     
+    // 0. ถ้าอยู่ใน Safety Zone ให้ใช้ moveIntoSafety
+    if (currentPos.startsWith('safety-')) {
+        return moveIntoSafety(marble, roll);
+    }
+
     let newPositionId;
 
     if (currentPos.startsWith('home-') && (roll === 1 || roll === 6)) {
@@ -146,11 +195,36 @@ function moveMarble(marble, roll) {
     } else if (currentPos.startsWith('space-')) {
         // B. เดินบนกระดานหลัก
         const currentSpaceIndex = parseInt(currentPos.split('-')[1]);
+        const finalTargetIndex = currentSpaceIndex + roll;
+
+        // ** 1. ตรวจสอบการเข้า Safety Zone **
+        const entranceIndex = (startSpaceIndex - 1 + totalSpaces) % totalSpaces;
         
-        // ** NOTE: ตรรกะการเดินเข้า Safety Zone ถูกละไว้เพื่อให้โค้ดนี้ใช้งานได้ทันที
+        // ตรวจสอบว่าหมากเดินข้าม/ถึงช่องเริ่มต้นของตัวเอง (Start Space) หรือไม่
+        const passedStart = (currentSpaceIndex < startSpaceIndex && finalTargetIndex >= startSpaceIndex) || (startSpaceIndex === 0 && currentSpaceIndex > entranceIndex && finalTargetIndex >= totalSpaces);
         
-        // เดินบนกระดานหลักทั่วไป (วนรอบ)
-        let newIndex = (currentSpaceIndex + roll) % totalSpaces;
+        if (passedStart) {
+            // หมากเดินครบหนึ่งรอบและกำลังจะเข้า Safety Zone
+            const rollIntoSafety = finalTargetIndex - startSpaceIndex; 
+            
+            if (rollIntoSafety >= 0 && rollIntoSafety < 5) {
+                 // เข้า Safety Zone ช่อง rollIntoSafety (0-4)
+                 const newSafetyId = `safety-${color}-${rollIntoSafety}`;
+                 const newSafetySpace = document.getElementById(newSafetyId);
+                 
+                 // ตรวจสอบหมากฝ่ายเดียวกัน (ไม่ให้เดินทับใน Safety Zone)
+                 if (newSafetySpace.children.length > 0) return false; 
+                 
+                 newSafetySpace.appendChild(marble);
+                 marble.setAttribute('data-position', newSafetyId);
+                 return true;
+            }
+            // ถ้า Roll มากเกินไปจนเลย Goal ไปเลย (ไม่เดิน)
+            return false;
+        }
+        
+        // ** 2. เดินบนกระดานหลักทั่วไป (วนรอบ) **
+        let newIndex = finalTargetIndex % totalSpaces;
         newPositionId = `space-${newIndex}`;
     }
     
@@ -165,7 +239,6 @@ function moveMarble(marble, roll) {
             
             if (existingMarbleColor !== color) {
                 sendMarbleHome(existingMarble);
-                console.log(`Captured ${existingMarbleColor}!`);
             } else {
                 // เดินทับหมากฝ่ายเดียวกัน ไม่อนุญาต
                 return false; 
@@ -188,11 +261,26 @@ function switchPlayer() {
     currentPlayerDisplay.textContent = `Current Player: ${currentPlayer}`;
     
     if (currentPlayer === AI_PLAYER) {
-        // ถ้าตา AI
         setTimeout(handleAIMove, 1000); 
     } else {
-        // ถ้าตาคน
         diceButton.disabled = false;
+    }
+}
+
+function rollDice() {
+    if (isMoving) return; 
+    
+    diceButton.disabled = true; 
+    
+    currentRoll = Math.floor(Math.random() * 6) + 1; 
+    
+    rollResult.textContent = `Dice Roll: ${currentRoll}`;
+    
+    const canMove = highlightPossibleMoves(currentRoll, currentPlayer);
+    
+    if (!canMove) {
+        rollResult.textContent += " - No moves possible, switching player.";
+        setTimeout(switchPlayer, 1500); 
     }
 }
 
@@ -201,23 +289,12 @@ function highlightPossibleMoves(roll, color) {
     const playerMarbles = document.querySelectorAll(`.marble-${color.toLowerCase()}`);
     
     playerMarbles.forEach(marble => {
-        const currentPos = marble.getAttribute('data-position');
-        let isMoveValid = false;
+        // ตรรกะการตรวจสอบความถูกต้องอย่างง่าย (ใช้ moveMarble() เป็นตัวตรวจสอบจริง)
+        // เพื่อไม่ให้โค้ดยุ่งยากเกินไป เราจะให้ผู้ใช้คลิกก่อนแล้ว moveMarble จะยืนยันอีกครั้ง
         
-        // ตรวจสอบการออกจากรัง
-        if (currentPos.startsWith('home-') && (roll === 1 || roll === 6)) {
-            isMoveValid = true;
-        } 
-        // ตรวจสอบการเดินบนกระดาน
-        else if (currentPos.startsWith('space-')) {
-            isMoveValid = true; 
-        }
-        
-        if (isMoveValid) {
-            marble.classList.add('can-move');
-            marble.addEventListener('click', handleMarbleClick);
-            hasMove = true;
-        }
+        marble.classList.add('can-move');
+        marble.addEventListener('click', handleMarbleClick);
+        hasMove = true; 
     });
     return hasMove;
 }
@@ -235,12 +312,18 @@ function handleMarbleClick(event) {
     });
 
     // 2. ย้ายหมาก
-    moveMarble(marble, currentRoll);
+    const moved = moveMarble(marble, currentRoll);
     
     // 3. เตรียมพร้อมสำหรับผู้เล่นคนถัดไป
     setTimeout(() => {
         isMoving = false;
-        switchPlayer();
+        if (moved) {
+            switchPlayer();
+        } else {
+            // ถ้าเดินไม่ได้ (เช่น เดินทับหมากตัวเอง) ให้ผู้เล่นคนเดิมทอยใหม่
+            alert("Invalid move or blocked. Please try again.");
+            diceButton.disabled = false;
+        }
     }, 500);
 }
 
@@ -250,24 +333,19 @@ function handleMarbleClick(event) {
 // ----------------------------------------------------------
 
 function handleAIMove() {
-    // 1. AI ทอยลูกเต๋า
     currentRoll = Math.floor(Math.random() * 6) + 1;
     rollResult.textContent = `Dice Roll (AI): ${currentRoll}`;
     
-    // 2. ตรวจสอบหมากที่เดินได้
     const possibleMoves = getAIMoves(currentRoll, AI_PLAYER.toLowerCase());
     
     if (possibleMoves.length > 0) {
-        // 3. AI เลือกหมากที่ดีที่สุด (Basic Strategy: ออกบ้าน/เดินไกล)
         const bestMarble = selectBestAIMarble(possibleMoves);
         
-        // 4. AI ย้ายหมาก
         setTimeout(() => {
             moveMarble(bestMarble, currentRoll);
             switchPlayer();
         }, 1000); 
     } else {
-        // เดินไม่ได้, เปลี่ยนผู้เล่นทันที
         rollResult.textContent += " - AI No moves possible.";
         setTimeout(switchPlayer, 1000);
     }
@@ -278,17 +356,10 @@ function getAIMoves(roll, color) {
     const playerMarbles = document.querySelectorAll(`.marble-${color}`);
     
     playerMarbles.forEach(marble => {
-        const currentPos = marble.getAttribute('data-position');
-        let isMoveValid = false;
-        
-        if (currentPos.startsWith('home-') && (roll === 1 || roll === 6)) {
-            isMoveValid = true;
-        } 
-        else if (currentPos.startsWith('space-')) {
-            isMoveValid = true;
-        }
-        
-        if (isMoveValid) {
+        // AI จะลองใช้ moveMarble() เพื่อตรวจสอบว่าเดินได้จริงหรือไม่
+        if (marble.getAttribute('data-position').startsWith('home-') && (roll !== 1 && roll !== 6)) {
+            // หมากในบ้านแต่ทอยไม่ได้ 1 หรือ 6 - ไม่ต้องทำอะไร
+        } else {
             validMarbles.push(marble);
         }
     });
@@ -304,17 +375,31 @@ function selectBestAIMarble(possibleMoves) {
         const currentPos = marble.getAttribute('data-position');
         const roll = currentRoll;
         
-        // AI STRATEGY:
-        // 1. พยายามออกจากบ้าน
+        // AI STRATEGY (Basic):
+        
+        // 1. Priority 1: พยายามออกจากบ้าน (สำคัญที่สุด)
         if (currentPos.startsWith('home-') && (roll === 1 || roll === 6)) {
-            score += 100; 
+            score += 1000; 
         }
         
-        // 2. เดินหมากที่อยู่ไกลที่สุด (ใกล้ Goal ที่สุด)
+        // 2. Priority 2: พยายามเข้า Safety Zone
+        if (currentPos.startsWith('space-')) {
+            const currentSpaceIndex = parseInt(currentPos.split('-')[1]);
+            const startSpaceIndex = START_POSITIONS[AI_PLAYER.toLowerCase()];
+            const distanceToStart = (startSpaceIndex - currentSpaceIndex + totalSpaces) % totalSpaces;
+
+            if (distanceToStart === roll) {
+                score += 500; // จะเข้า Safety Zone พอดี
+            }
+        }
+        
+        // 3. Priority 3: เดินหมากที่อยู่ไกลที่สุด
         if (currentPos.startsWith('space-')) {
             const currentSpaceIndex = parseInt(currentPos.split('-')[1]);
             score += currentSpaceIndex;
         }
+        
+        // 4. Priority 4: พยายามกินหมาก (ถ้าตรวจสอบได้) - โค้ดนี้ไม่รวมตรรกะการตรวจสอบการกินล่วงหน้า
         
         if (score > bestScore) {
             bestScore = score;
