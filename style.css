@@ -1,5 +1,5 @@
 /* ==========================================================
-   JACKAROO GAME STYLES (style.css) - FINAL VERSION
+   JACKAROO GAME STYLES (style.css) - FINAL VERSION (4 Players)
    ========================================================== */
 
 body {
@@ -136,18 +136,16 @@ h1 {
 }
 
 /* ==========================================================
-   POSITIONING ZONES (Red and Blue)
+   POSITIONING ZONES (4 Players)
    ========================================================== */
 
 /* --- RED PLAYER ZONES (Start at space-0, moves clockwise) --- */
-/* นำ Home Base 4 ช่องออกจากกระดานวงกลมด้านขวา */
 .home-red:nth-child(53) { top: 200px; left: 450px; }
 .home-red:nth-child(54) { top: 200px; left: 490px; }
 .home-red:nth-child(55) { top: 240px; left: 450px; }
 .home-red:nth-child(56) { top: 240px; left: 490px; }
 .home-red { background-color: rgba(255, 0, 0, 0.2); } 
 
-/* Safety Zone 5 ช่อง วางเป็นเส้นตรงเข้า Goal จากทางขวา */
 .safety-red { background-color: rgba(255, 0, 0, 0.4); border-color: red; }
 .safety-red:nth-child(57) { top: 50%; right: 100px; transform: translateY(-50%); } 
 .safety-red:nth-child(58) { top: 50%; right: 140px; transform: translateY(-50%); } 
@@ -157,17 +155,45 @@ h1 {
 
 
 /* --- BLUE PLAYER ZONES (Start at space-13, moves clockwise) --- */
-/* นำ Home Base 4 ช่องออกจากกระดานวงกลมด้านบน */
 .home-blue { background-color: rgba(0, 0, 255, 0.2); }
 .home-blue:nth-child(62) { top: 50px; left: 200px; }
 .home-blue:nth-child(63) { top: 50px; left: 240px; }
 .home-blue:nth-child(64) { top: 90px; left: 200px; }
 .home-blue:nth-child(65) { top: 90px; left: 240px; }
 
-/* Safety Zone 5 ช่อง วางเป็นเส้นตรงเข้า Goal จากทางด้านบน */
 .safety-blue { background-color: rgba(0, 0, 255, 0.4); border-color: blue; }
 .safety-blue:nth-child(66) { top: 100px; left: 50%; transform: translateX(-50%); } 
 .safety-blue:nth-child(67) { top: 140px; left: 50%; transform: translateX(-50%); } 
 .safety-blue:nth-child(68) { top: 180px; left: 50%; transform: translateX(-50%); } 
 .safety-blue:nth-child(69) { top: 220px; left: 50%; transform: translateX(-50%); } 
-.safety-blue:nth-child(70) { top: 260px; left: 50%; transform: translateX(-50%); }
+.safety-blue:nth-child(70) { top: 260px; left: 50%; transform: translateX(-50%); } 
+
+
+/* --- GREEN PLAYER ZONES (Start at space-26, moves clockwise) --- */
+.home-green:nth-child(71) { top: 200px; left: 50px; }
+.home-green:nth-child(72) { top: 200px; left: 90px; }
+.home-green:nth-child(73) { top: 240px; left: 50px; }
+.home-green:nth-child(74) { top: 240px; left: 90px; }
+.home-green { background-color: rgba(0, 128, 0, 0.2); } 
+
+.safety-green { background-color: rgba(0, 128, 0, 0.4); border-color: green; }
+.safety-green:nth-child(75) { top: 50%; left: 100px; transform: translateY(-50%); } 
+.safety-green:nth-child(76) { top: 50%; left: 140px; transform: translateY(-50%); } 
+.safety-green:nth-child(77) { top: 50%; left: 180px; transform: translateY(-50%); } 
+.safety-green:nth-child(78) { top: 50%; left: 220px; transform: translateY(-50%); } 
+.safety-green:nth-child(79) { top: 50%; left: 260px; transform: translateY(-50%); } 
+
+
+/* --- YELLOW PLAYER ZONES (Start at space-39, moves clockwise) --- */
+.home-yellow:nth-child(80) { top: 450px; left: 200px; }
+.home-yellow:nth-child(81) { top: 450px; left: 240px; }
+.home-yellow:nth-child(82) { top: 490px; left: 200px; }
+.home-yellow:nth-child(83) { top: 490px; left: 240px; }
+.home-yellow { background-color: rgba(255, 255, 0, 0.2); } 
+
+.safety-yellow { background-color: rgba(255, 255, 0, 0.4); border-color: #aa0; }
+.safety-yellow:nth-child(84) { top: 500px; left: 50%; transform: translateX(-50%); } 
+.safety-yellow:nth-child(85) { top: 460px; left: 50%; transform: translateX(-50%); } 
+.safety-yellow:nth-child(86) { top: 420px; left: 50%; transform: translateX(-50%); } 
+.safety-yellow:nth-child(87) { top: 380px; left: 50%; transform: translateX(-50%); } 
+.safety-yellow:nth-child(88) { top: 340px; left: 50%; transform: translateX(-50%); }
