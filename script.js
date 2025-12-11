@@ -1,5 +1,5 @@
 // ==========================================================
-// JACKAROO GAME LOGIC (script.js) - WITH BASIC AI
+// JACKAROO GAME LOGIC (script.js) - FINAL VERSION with BASIC AI
 // ==========================================================
 
 const gameBoard = document.getElementById('game-board');
@@ -15,7 +15,7 @@ const AI_PLAYER = 'Blue';
 
 let currentPlayer = 'Red';
 let currentRoll = 0;
-let isMoving = false; // ป้องกันการคลิกซ้ำขณะกำลังย้ายหมาก
+let isMoving = false; 
 
 const START_POSITIONS = { 
     'red': 0, 
@@ -138,7 +138,6 @@ function moveMarble(marble, roll) {
     const startSpaceIndex = START_POSITIONS[color];
     
     let newPositionId;
-    let newIndex = -1;
 
     if (currentPos.startsWith('home-') && (roll === 1 || roll === 6)) {
         // A. ออกจากรัง
@@ -148,30 +147,18 @@ function moveMarble(marble, roll) {
         // B. เดินบนกระดานหลัก
         const currentSpaceIndex = parseInt(currentPos.split('-')[1]);
         
-        // *** ตรวจสอบการเดินเข้า Safety Zone ***
-        const movesToSafety = (startSpaceIndex - currentSpaceIndex + totalSpaces) % totalSpaces;
+        // ** NOTE: ตรรกะการเดินเข้า Safety Zone ถูกละไว้เพื่อให้โค้ดนี้ใช้งานได้ทันที
         
-        if (roll === movesToSafety && roll > 0) {
-            // หมากกำลังจะเดินถึงช่องเข้าบ้าน (Start Space ของตัวเอง) พอดี
-            newPositionId = `safety-${color}-0`; // เข้า Safety Zone ช่องแรก
-            // **TODO: ตรรกะการเข้า Safety Zone
-        
-        } else if (currentSpaceIndex + roll >= totalSpaces && startSpaceIndex === 0) {
-            // กรณี Red (Start=0) เดินข้ามช่อง 51
-            // **TODO: ตรรกะการเข้า Safety Zone สำหรับ Red
-            
-        } else {
-            // เดินบนกระดานหลักทั่วไป (วนรอบ)
-            newIndex = (currentSpaceIndex + roll) % totalSpaces;
-            newPositionId = `space-${newIndex}`;
-        }
+        // เดินบนกระดานหลักทั่วไป (วนรอบ)
+        let newIndex = (currentSpaceIndex + roll) % totalSpaces;
+        newPositionId = `space-${newIndex}`;
     }
     
     // 3. ดำเนินการย้ายหมาก
     if (newPositionId) {
         const newSpace = document.getElementById(newPositionId);
         
-        // 4. ตรวจสอบการกิน (Jumping)
+        // 4. ตรวจสอบการกิน (Jumping) - เฉพาะบนช่องเดินหลัก
         if (newPositionId.startsWith('space-') && newSpace.children.length > 0) {
             const existingMarble = newSpace.children[0];
             const existingMarbleColor = existingMarble.getAttribute('data-color');
@@ -217,13 +204,12 @@ function highlightPossibleMoves(roll, color) {
         const currentPos = marble.getAttribute('data-position');
         let isMoveValid = false;
         
-        // 1. ตรวจสอบการออกจากรัง
+        // ตรวจสอบการออกจากรัง
         if (currentPos.startsWith('home-') && (roll === 1 || roll === 6)) {
             isMoveValid = true;
         } 
-        // 2. ตรวจสอบการเดินบนกระดาน (ไม่ซับซ้อนเกินไป)
+        // ตรวจสอบการเดินบนกระดาน
         else if (currentPos.startsWith('space-')) {
-            // **TODO: การตรวจสอบที่ซับซ้อน (เข้า Safety Zone, เดินทับฝ่ายเดียวกัน) จะถูกจัดการใน moveMarble()
             isMoveValid = true; 
         }
         
@@ -272,16 +258,14 @@ function handleAIMove() {
     const possibleMoves = getAIMoves(currentRoll, AI_PLAYER.toLowerCase());
     
     if (possibleMoves.length > 0) {
-        // 3. AI เลือกหมากที่ดีที่สุด (Basic Strategy)
+        // 3. AI เลือกหมากที่ดีที่สุด (Basic Strategy: ออกบ้าน/เดินไกล)
         const bestMarble = selectBestAIMarble(possibleMoves);
         
         // 4. AI ย้ายหมาก
         setTimeout(() => {
-            if (moveMarble(bestMarble, currentRoll)) {
-                // ย้ายสำเร็จ
-            }
+            moveMarble(bestMarble, currentRoll);
             switchPlayer();
-        }, 1000); // หน่วงเวลาเพื่อให้ดูเหมือน AI กำลังคิด
+        }, 1000); 
     } else {
         // เดินไม่ได้, เปลี่ยนผู้เล่นทันที
         rollResult.textContent += " - AI No moves possible.";
@@ -297,7 +281,6 @@ function getAIMoves(roll, color) {
         const currentPos = marble.getAttribute('data-position');
         let isMoveValid = false;
         
-        // ตรรกะการเดินหมากแบบง่าย ๆ สำหรับ AI (เหมือน highlightPossibleMoves)
         if (currentPos.startsWith('home-') && (roll === 1 || roll === 6)) {
             isMoveValid = true;
         } 
@@ -321,23 +304,17 @@ function selectBestAIMarble(possibleMoves) {
         const currentPos = marble.getAttribute('data-position');
         const roll = currentRoll;
         
-        // ******* AI STRATEGY *******
-        
-        // 1. Priority 1: พยายามออกจากบ้าน
+        // AI STRATEGY:
+        // 1. พยายามออกจากบ้าน
         if (currentPos.startsWith('home-') && (roll === 1 || roll === 6)) {
             score += 100; 
         }
         
-        // 2. Priority 2: พยายามกินหมากฝ่ายตรงข้าม (ถ้าคำนวณแล้วว่าเดินไปกินได้)
-        // **TODO: เพิ่มตรรกะการคำนวณการกิน (ซับซ้อน)
-        
-        // 3. Priority 3: เดินหมากที่อยู่ไกลที่สุด (ใกล้ Goal ที่สุด)
+        // 2. เดินหมากที่อยู่ไกลที่สุด (ใกล้ Goal ที่สุด)
         if (currentPos.startsWith('space-')) {
             const currentSpaceIndex = parseInt(currentPos.split('-')[1]);
-            score += currentSpaceIndex; // ยิ่งเดินไกล ยิ่งคะแนนสูง
+            score += currentSpaceIndex;
         }
-        
-        // ******* END AI STRATEGY *******
         
         if (score > bestScore) {
             bestScore = score;
@@ -345,7 +322,6 @@ function selectBestAIMarble(possibleMoves) {
         }
     });
     
-    // ถ้าไม่พบการเคลื่อนไหวที่ดีกว่า ให้เลือกหมากตัวแรก
     return bestMarble || possibleMoves[0]; 
 }
 
