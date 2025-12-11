@@ -1,5 +1,5 @@
 // ==========================================================
-// JACKAROO GAME LOGIC (script.js)
+// JACKAROO GAME LOGIC (script.js) - WITH BASIC AI
 // ==========================================================
 
 const gameBoard = document.getElementById('game-board');
@@ -8,122 +8,47 @@ const rollResult = document.getElementById('roll-result');
 const currentPlayerDisplay = document.getElementById('current-player');
 
 const totalSpaces = 52; 
-const boardRadius = 250; // รัศมีของวงกลม (px)
-const centerOffset = 300; // จุดศูนย์กลางของกระดาน (ขนาด 600x600)
+const boardRadius = 250; 
+const centerOffset = 300; 
+const PLAYER_COLORS = ['Red', 'Blue']; // Red is Human, Blue is AI
+const AI_PLAYER = 'Blue'; 
 
 let currentPlayer = 'Red';
+let currentRoll = 0;
+let isMoving = false; // ป้องกันการคลิกซ้ำขณะกำลังย้ายหมาก
 
-// ฟังก์ชันสำหรับสร้างกระดานเกมและกำหนดตำแหน่ง
-function createBoard() {
-    gameBoard.innerHTML = ''; 
-    
-    // คำนวณมุมที่แต่ละช่องเดินควรจะอยู่
-    const angleIncrement = (360 / totalSpaces) * (Math.PI / 180); // แปลงเป็นเรเดียน
-    
-    for (let i = 0; i < totalSpaces; i++) {
-        const space = document.createElement('div');
-        space.classList.add('board-space');
-        space.id = `space-${i}`;
-        
-        // คำนวณตำแหน่ง X และ Y
-        const angle = i * angleIncrement;
-        
-        // x = รัศมี * cos(มุม) + จุดศูนย์กลาง - ครึ่งหนึ่งของขนาดช่อง
-        const x = (boardRadius * Math.cos(angle)) + centerOffset - 15; 
-        
-        // y = รัศมี * sin(มุม) + จุดศูนย์กลาง - ครึ่งหนึ่งของขนาดช่อง
-        const y = (boardRadius * Math.sin(angle)) + centerOffset - 15; 
+const START_POSITIONS = { 
+    'red': 0, 
+    'blue': 13, 
+    'green': 26, 
+    'yellow': 39 
+};
 
-        // กำหนดตำแหน่งผ่าน CSS
-        space.style.left = `${x}px`;
-        space.style.top = `${y}px`;
-        
-        // กำหนดสีให้กับช่องเริ่มต้นของผู้เล่น (สมมติว่าช่อง 0, 13, 26, 39 เป็นช่องเริ่มต้น)
-        if (i === 0) { // Red Start
-            space.classList.add('start-red');
-        } else if (i === 13) { // Blue Start
-            space.classList.add('start-blue');
-        } else if (i === 26) { // Green Start (ถ้ามี 4 ผู้เล่น)
-            space.classList.add('start-green');
-        } else if (i === 39) { // Yellow Start (ถ้ามี 4 ผู้เล่น)
-            space.classList.add('start-yellow');
-        }
-        
-        // เพิ่มเลขช่อง (สำหรับ debug)
-        space.textContent = i; 
-        
-        gameBoard.appendChild(space);
-    }
-    
-    // **TODO:** สร้าง Home Base (รัง) และ Exit Point (จุดเข้าบ้าน) ในขั้นตอนถัดไป
-}
 
-// ฟังก์ชันทอยลูกเต๋า
-function rollDice() {
-    const roll = Math.floor(Math.random() * 6) + 1;
-    
-    rollResult.textContent = `Dice Roll: ${roll}`;
-    
-    // **TODO:** เพิ่มตรรกะการเดินหมากตามผลลูกเต๋า
-    
-    // เปลี่ยนผู้เล่น (สำหรับทดสอบ)
-    switchPlayer(); 
-}
+// ----------------------------------------------------------
+// 1. BOARD SETUP FUNCTIONS
+// ----------------------------------------------------------
 
-// ฟังก์ชันเปลี่ยนผู้เล่น
-function switchPlayer() {
-    // สำหรับ 2 ผู้เล่น: Red -> Blue -> Red
-    if (currentPlayer === 'Red') {
-        currentPlayer = 'Blue';
-    } else {
-        currentPlayer = 'Red';
-    }
-    currentPlayerDisplay.textContent = `Current Player: ${currentPlayer}`;
-}
-
-// เรียกใช้ฟังก์ชันเมื่อโหลดหน้าจอ
-createBoard(); 
-
-// ผูกฟังก์ชันกับปุ่ม
-diceButton.addEventListener('click', rollDice);
-// ... (โค้ดเดิมด้านบน) ...
-
-const PLAYER_COLORS = ['Red', 'Blue', 'Green', 'Yellow']; // กำหนดสีผู้เล่น
-
-// ฟังก์ชันสร้างรังและเส้นทางปลอดภัย
 function createHomesAndSafetyZones() {
     const homeContainer = document.getElementById('game-board');
 
-    // ตำแหน่งเริ่มต้นสำหรับการวาง Home/Safety (ในหน่วยองศา)
-    // Red Start: 0 องศา, Blue Start: 90 องศา (โดยประมาณในวงกลม 4 ส่วน)
-    const startAngles = {
-        'Red': 0, // อยู่ที่ช่อง 0
-        'Blue': 90, // อยู่ที่ช่อง 13
-        // ถ้ามี 4 ผู้เล่น:
-        // 'Green': 180, // ช่อง 26
-        // 'Yellow': 270  // ช่อง 39
-    };
-    
-    // สร้าง Home Base (รัง) และ Safety Zone (5 ช่อง) สำหรับแต่ละสี
     PLAYER_COLORS.forEach(color => {
+        const lowerColor = color.toLowerCase();
+        
         // 1. สร้างรัง (Home Base) 4 ช่อง
         for (let i = 0; i < 4; i++) {
             const homeSpace = document.createElement('div');
-            homeSpace.classList.add('home-space', `home-${color.toLowerCase()}`);
-            homeSpace.id = `home-${color.toLowerCase()}-${i}`;
-            // กำหนดตำแหน่งรังที่อยู่ด้านในกระดานวงกลม (ใช้ CSS จัดวาง)
+            homeSpace.classList.add('home-space', `home-${lowerColor}`);
+            homeSpace.id = `home-${lowerColor}-${i}`;
             homeContainer.appendChild(homeSpace);
         }
 
         // 2. สร้างเส้นทางปลอดภัย (Safety Zone) 5 ช่อง
         for (let i = 0; i < 5; i++) {
             const safetySpace = document.createElement('div');
-            safetySpace.classList.add('safety-space', `safety-${color.toLowerCase()}`);
-            safetySpace.id = `safety-${color.toLowerCase()}-${i}`;
-            
-            // เพิ่มเลขช่องปลอดภัย
+            safetySpace.classList.add('safety-space', `safety-${lowerColor}`);
+            safetySpace.id = `safety-${lowerColor}-${i}`;
             safetySpace.textContent = `S${i+1}`; 
-            
             homeContainer.appendChild(safetySpace);
         }
     });
@@ -135,120 +60,155 @@ function createHomesAndSafetyZones() {
     homeContainer.appendChild(goal);
 }
 
-// แก้ไขฟังก์ชัน createBoard() เดิม
-function createBoard() {
-    gameBoard.innerHTML = ''; 
-    
-    // ... (โค้ดเดิมสำหรับสร้าง 52 ช่องวงกลม) ...
-    // *** ไม่ต้องลบโค้ดนี้ ให้คงไว้ ***
-    
-    // คำนวณมุมที่แต่ละช่องเดินควรจะอยู่
-    const angleIncrement = (360 / totalSpaces) * (Math.PI / 180); 
-    // ... (โค้ดการสร้าง space) ...
-    
-    // --- เพิ่มส่วนนี้: เรียกฟังก์ชันสร้างรังและปลอดภัย ---
-    createHomesAndSafetyZones();
-    // ... (โค้ดเดิมด้านบน) ...
-
-const PLAYER_COLORS = ['Red', 'Blue']; // สำหรับตอนนี้ เราใช้แค่ Red และ Blue ก่อน
-// หากต้องการ 4 ผู้เล่น: const PLAYER_COLORS = ['Red', 'Blue', 'Green', 'Yellow'];
-
-// ----------------------------------------------------------
-// เพิ่มฟังก์ชันสำหรับสร้างหมาก (Marbles)
-// ----------------------------------------------------------
-
 function createMarbles() {
     PLAYER_COLORS.forEach(color => {
         const lowerColor = color.toLowerCase();
         
-        // สร้างหมาก 4 ตัวสำหรับผู้เล่นแต่ละสี
         for (let i = 0; i < 4; i++) {
             const marble = document.createElement('div');
             marble.classList.add('marble', `marble-${lowerColor}`);
             marble.id = `marble-${lowerColor}-${i}`;
             marble.setAttribute('data-color', lowerColor);
-            marble.setAttribute('data-position', `home-${lowerColor}-${i}`); // ตำแหน่งเริ่มต้นคือในรัง
+            marble.setAttribute('data-position', `home-${lowerColor}-${i}`);
             
-            // เพิ่มหมากลงในรังที่สร้างไว้ก่อนหน้านี้
             const homeSpace = document.getElementById(`home-${lowerColor}-${i}`);
             if (homeSpace) {
                 homeSpace.appendChild(marble);
             }
-            // *** NOTE: หมากจะถูกย้ายจากรังไปที่ช่องเริ่มต้น (Start Space) เมื่อเกมเริ่ม ***
         }
     });
 }
 
-// ----------------------------------------------------------
-// แก้ไขฟังก์ชัน createHomesAndSafetyZones()
-// ----------------------------------------------------------
-
-function createHomesAndSafetyZones() {
-    const homeContainer = document.getElementById('game-board');
-
-    // ... (โค้ดเดิมสำหรับสร้างรัง 4 ช่อง และ Safety Zone 5 ช่อง) ...
-    // *** โค้ดส่วนนี้ยังคงเดิม ***
-
-    // 3. สร้างจุดจบ (Finish/Goal)
-    const goal = document.createElement('div');
-    goal.id = 'game-goal';
-    goal.textContent = 'GOAL';
-    homeContainer.appendChild(goal);
-}
-
-// ----------------------------------------------------------
-// แก้ไขฟังก์ชัน createBoard() เพื่อเรียกใช้ createMarbles()
-// ----------------------------------------------------------
-
 function createBoard() {
     gameBoard.innerHTML = ''; 
+    const angleIncrement = (360 / totalSpaces) * (Math.PI / 180); 
     
-    // ... (โค้ดเดิมสำหรับสร้าง 52 ช่องวงกลม) ...
+    for (let i = 0; i < totalSpaces; i++) {
+        const space = document.createElement('div');
+        space.classList.add('board-space');
+        space.id = `space-${i}`;
+        
+        const angle = i * angleIncrement;
+        const x = (boardRadius * Math.cos(angle)) + centerOffset - 15; 
+        const y = (boardRadius * Math.sin(angle)) + centerOffset - 15; 
+
+        space.style.left = `${x}px`;
+        space.style.top = `${y}px`;
+        
+        const startColors = Object.keys(START_POSITIONS);
+        startColors.forEach(color => {
+            if (i === START_POSITIONS[color]) {
+                space.classList.add(`start-${color}`);
+            }
+        });
+        
+        space.textContent = i; 
+        gameBoard.appendChild(space);
+    }
     
     createHomesAndSafetyZones();
-    
-    // --- เพิ่มส่วนนี้: เรียกฟังก์ชันสร้างหมาก ---
     createMarbles();
 }
 
-// ... (โค้ดส่วน Roll Dice และ Switch Player ยังคงเดิม) ...
-}
-// ... (โค้ดเดิมด้านบน) ...
 
-let currentRoll = 0; // ตัวแปรสำหรับเก็บผลลูกเต๋า
+// ----------------------------------------------------------
+// 2. GAME LOGIC FUNCTIONS
+// ----------------------------------------------------------
 
-// ฟังก์ชันทอยลูกเต๋า
-function rollDice() {
-    // ปิดปุ่มทอยลูกเต๋าชั่วคราวเพื่อรอการเดินหมาก
-    diceButton.disabled = true; 
+function sendMarbleHome(marble) {
+    const color = marble.getAttribute('data-color');
     
-    // ลูกเต๋า Jackaroo มักใช้ 6 หน้า
-    currentRoll = Math.floor(Math.random() * 6) + 1; 
-    
-    rollResult.textContent = `Dice Roll: ${currentRoll}`;
-    
-    // -----------------------------------------------------------------
-    // **ตรรกะสำคัญ:** อนุญาตให้ผู้เล่นเลือกหมากที่สามารถเดินได้
-    // -----------------------------------------------------------------
-    
-    // หากทอยได้ 1 หรือ 6: อนุญาตให้นำหมากออกจากรังได้
-    const canMove = highlightPossibleMoves(currentRoll, currentPlayer);
-    
-    if (!canMove) {
-        // หากเดินไม่ได้เลย (เช่น ทอย 5 แต่หมากทั้งหมดอยู่ในรัง)
-        rollResult.textContent += " - No moves possible, switching player.";
-        setTimeout(() => {
-            switchPlayer();
-            diceButton.disabled = false; // เปิดปุ่มอีกครั้ง
-        }, 1500); 
+    let foundHome = false;
+    for (let i = 0; i < 4; i++) {
+        const homeId = `home-${color}-${i}`;
+        const homeSpace = document.getElementById(homeId);
+        
+        if (homeSpace && homeSpace.children.length === 0) {
+            homeSpace.appendChild(marble);
+            marble.setAttribute('data-position', homeId);
+            foundHome = true;
+            break;
+        }
     }
 }
 
-// ... (โค้ดส่วน switchPlayer() ยังคงเดิม) ...
+function moveMarble(marble, roll) {
+    const currentPos = marble.getAttribute('data-position');
+    const color = marble.getAttribute('data-color');
+    const startSpaceIndex = START_POSITIONS[color];
+    
+    let newPositionId;
+    let newIndex = -1;
 
-// -----------------------------------------------------------------
-// ฟังก์ชันใหม่: ตรวจสอบและไฮไลต์หมากที่สามารถเดินได้
-// -----------------------------------------------------------------
+    if (currentPos.startsWith('home-') && (roll === 1 || roll === 6)) {
+        // A. ออกจากรัง
+        newPositionId = `space-${startSpaceIndex}`;
+        
+    } else if (currentPos.startsWith('space-')) {
+        // B. เดินบนกระดานหลัก
+        const currentSpaceIndex = parseInt(currentPos.split('-')[1]);
+        
+        // *** ตรวจสอบการเดินเข้า Safety Zone ***
+        const movesToSafety = (startSpaceIndex - currentSpaceIndex + totalSpaces) % totalSpaces;
+        
+        if (roll === movesToSafety && roll > 0) {
+            // หมากกำลังจะเดินถึงช่องเข้าบ้าน (Start Space ของตัวเอง) พอดี
+            newPositionId = `safety-${color}-0`; // เข้า Safety Zone ช่องแรก
+            // **TODO: ตรรกะการเข้า Safety Zone
+        
+        } else if (currentSpaceIndex + roll >= totalSpaces && startSpaceIndex === 0) {
+            // กรณี Red (Start=0) เดินข้ามช่อง 51
+            // **TODO: ตรรกะการเข้า Safety Zone สำหรับ Red
+            
+        } else {
+            // เดินบนกระดานหลักทั่วไป (วนรอบ)
+            newIndex = (currentSpaceIndex + roll) % totalSpaces;
+            newPositionId = `space-${newIndex}`;
+        }
+    }
+    
+    // 3. ดำเนินการย้ายหมาก
+    if (newPositionId) {
+        const newSpace = document.getElementById(newPositionId);
+        
+        // 4. ตรวจสอบการกิน (Jumping)
+        if (newPositionId.startsWith('space-') && newSpace.children.length > 0) {
+            const existingMarble = newSpace.children[0];
+            const existingMarbleColor = existingMarble.getAttribute('data-color');
+            
+            if (existingMarbleColor !== color) {
+                sendMarbleHome(existingMarble);
+                console.log(`Captured ${existingMarbleColor}!`);
+            } else {
+                // เดินทับหมากฝ่ายเดียวกัน ไม่อนุญาต
+                return false; 
+            }
+        }
+        
+        // 5. ย้ายหมากจริง
+        newSpace.appendChild(marble);
+        marble.setAttribute('data-position', newPositionId);
+        return true;
+    }
+    return false;
+}
+
+function switchPlayer() {
+    const currentIndex = PLAYER_COLORS.indexOf(currentPlayer);
+    const nextIndex = (currentIndex + 1) % PLAYER_COLORS.length;
+    currentPlayer = PLAYER_COLORS[nextIndex];
+    
+    currentPlayerDisplay.textContent = `Current Player: ${currentPlayer}`;
+    
+    if (currentPlayer === AI_PLAYER) {
+        // ถ้าตา AI
+        setTimeout(handleAIMove, 1000); 
+    } else {
+        // ถ้าตาคน
+        diceButton.disabled = false;
+    }
+}
+
 function highlightPossibleMoves(roll, color) {
     let hasMove = false;
     const playerMarbles = document.querySelectorAll(`.marble-${color.toLowerCase()}`);
@@ -257,94 +217,142 @@ function highlightPossibleMoves(roll, color) {
         const currentPos = marble.getAttribute('data-position');
         let isMoveValid = false;
         
-        // 1. ตรวจสอบการออกจากรัง (Home Base)
+        // 1. ตรวจสอบการออกจากรัง
         if (currentPos.startsWith('home-') && (roll === 1 || roll === 6)) {
             isMoveValid = true;
         } 
-        // 2. ตรวจสอบการเดินบนกระดาน (Board Space)
+        // 2. ตรวจสอบการเดินบนกระดาน (ไม่ซับซ้อนเกินไป)
         else if (currentPos.startsWith('space-')) {
-            // **TODO:** เพิ่มตรรกะการตรวจสอบขอบเขต (ไม่ให้เดินเกิน 52 ช่อง)
-            // **TODO:** เพิ่มตรรกะการตรวจสอบการกิน/เดินทับหมากฝ่ายเดียวกัน
-            isMoveValid = true; // สมมติว่าเดินได้เสมอ
+            // **TODO: การตรวจสอบที่ซับซ้อน (เข้า Safety Zone, เดินทับฝ่ายเดียวกัน) จะถูกจัดการใน moveMarble()
+            isMoveValid = true; 
         }
         
-        // 3. ตรวจสอบการเข้า Safety Zone/Goal
-        // **TODO:** เพิ่มตรรกะการคำนวณระยะทางเข้า Safety Zone
-        
         if (isMoveValid) {
-            marble.classList.add('can-move'); // เพิ่มคลาสไฮไลต์
-            marble.addEventListener('click', handleMarbleClick); // ผูก Event
+            marble.classList.add('can-move');
+            marble.addEventListener('click', handleMarbleClick);
             hasMove = true;
         }
     });
-
     return hasMove;
 }
 
-
-// -----------------------------------------------------------------
-// ฟังก์ชันใหม่: จัดการเมื่อผู้เล่นคลิกที่หมากที่ไฮไลต์
-// -----------------------------------------------------------------
 function handleMarbleClick(event) {
-    const marble = event.currentTarget;
-    const color = marble.getAttribute('data-color');
-    const roll = currentRoll;
+    if (isMoving) return;
+    isMoving = true;
     
-    // 1. ลบ Event Listener และไฮไลต์ออกจากหมากทั้งหมด
+    const marble = event.currentTarget;
+    
+    // 1. ลบ Event Listener และไฮไลต์
     document.querySelectorAll('.marble').forEach(m => {
         m.classList.remove('can-move');
         m.removeEventListener('click', handleMarbleClick);
     });
 
     // 2. ย้ายหมาก
-    moveMarble(marble, roll);
+    moveMarble(marble, currentRoll);
     
     // 3. เตรียมพร้อมสำหรับผู้เล่นคนถัดไป
     setTimeout(() => {
+        isMoving = false;
         switchPlayer();
-        diceButton.disabled = false; // เปิดปุ่มทอยลูกเต๋า
     }, 500);
 }
 
 
-// -----------------------------------------------------------------
-// ฟังก์ชันใหม่: ย้ายหมากจริง (Core Movement)
-// -----------------------------------------------------------------
-function moveMarble(marble, roll) {
-    const currentPos = marble.getAttribute('data-position');
-    const color = marble.getAttribute('data-color');
-    
-    // หาตำแหน่งเริ่มต้นบนกระดาน (สำหรับแต่ละสี)
-    const startPositions = { 'red': 0, 'blue': 13, 'green': 26, 'yellow': 39 };
-    const startSpaceId = `space-${startPositions[color]}`;
+// ----------------------------------------------------------
+// 3. AI LOGIC FUNCTIONS
+// ----------------------------------------------------------
 
-    let newPositionId;
-
-    if (currentPos.startsWith('home-')) {
-        // A. ถ้าหมากอยู่ในรังและทอยได้ 1 หรือ 6 -> ย้ายไปที่ช่องเริ่มต้น
-        newPositionId = startSpaceId;
-    } else if (currentPos.startsWith('space-')) {
-        // B. ถ้าหมากอยู่บนกระดาน -> คำนวณตำแหน่งใหม่
-        const currentSpaceIndex = parseInt(currentPos.split('-')[1]);
-        let newIndex = (currentSpaceIndex + roll) % totalSpaces;
-        
-        // **TODO:** เพิ่มการตรวจสอบกรณีเดินเข้า Safety Zone (ถ้าเดินเลยช่องเข้าบ้านไป)
-        
-        newPositionId = `space-${newIndex}`;
-        
-        // **TODO:** ตรวจสอบการกิน (Jumping) - ถ้าช่องใหม่มีหมากฝ่ายตรงข้าม
-    }
+function handleAIMove() {
+    // 1. AI ทอยลูกเต๋า
+    currentRoll = Math.floor(Math.random() * 6) + 1;
+    rollResult.textContent = `Dice Roll (AI): ${currentRoll}`;
     
-    // 3. ดำเนินการย้ายหมาก
-    if (newPositionId) {
-        const newSpace = document.getElementById(newPositionId);
+    // 2. ตรวจสอบหมากที่เดินได้
+    const possibleMoves = getAIMoves(currentRoll, AI_PLAYER.toLowerCase());
+    
+    if (possibleMoves.length > 0) {
+        // 3. AI เลือกหมากที่ดีที่สุด (Basic Strategy)
+        const bestMarble = selectBestAIMarble(possibleMoves);
         
-        // 4. กินหมาก (ถ้ามีหมากฝ่ายตรงข้ามในช่องใหม่)
-        // **TODO:** นำหมากฝ่ายตรงข้ามกลับไปรัง
-        
-        // 5. ย้ายหมากจริง
-        newSpace.appendChild(marble);
-        marble.setAttribute('data-position', newPositionId);
+        // 4. AI ย้ายหมาก
+        setTimeout(() => {
+            if (moveMarble(bestMarble, currentRoll)) {
+                // ย้ายสำเร็จ
+            }
+            switchPlayer();
+        }, 1000); // หน่วงเวลาเพื่อให้ดูเหมือน AI กำลังคิด
+    } else {
+        // เดินไม่ได้, เปลี่ยนผู้เล่นทันที
+        rollResult.textContent += " - AI No moves possible.";
+        setTimeout(switchPlayer, 1000);
     }
 }
-// ... (โค้ดส่วน Roll Dice และ Switch Player ยังคงเดิม) ...
+
+function getAIMoves(roll, color) {
+    const validMarbles = [];
+    const playerMarbles = document.querySelectorAll(`.marble-${color}`);
+    
+    playerMarbles.forEach(marble => {
+        const currentPos = marble.getAttribute('data-position');
+        let isMoveValid = false;
+        
+        // ตรรกะการเดินหมากแบบง่าย ๆ สำหรับ AI (เหมือน highlightPossibleMoves)
+        if (currentPos.startsWith('home-') && (roll === 1 || roll === 6)) {
+            isMoveValid = true;
+        } 
+        else if (currentPos.startsWith('space-')) {
+            isMoveValid = true;
+        }
+        
+        if (isMoveValid) {
+            validMarbles.push(marble);
+        }
+    });
+    return validMarbles;
+}
+
+function selectBestAIMarble(possibleMoves) {
+    let bestMarble = null;
+    let bestScore = -Infinity;
+    
+    possibleMoves.forEach(marble => {
+        let score = 0;
+        const currentPos = marble.getAttribute('data-position');
+        const roll = currentRoll;
+        
+        // ******* AI STRATEGY *******
+        
+        // 1. Priority 1: พยายามออกจากบ้าน
+        if (currentPos.startsWith('home-') && (roll === 1 || roll === 6)) {
+            score += 100; 
+        }
+        
+        // 2. Priority 2: พยายามกินหมากฝ่ายตรงข้าม (ถ้าคำนวณแล้วว่าเดินไปกินได้)
+        // **TODO: เพิ่มตรรกะการคำนวณการกิน (ซับซ้อน)
+        
+        // 3. Priority 3: เดินหมากที่อยู่ไกลที่สุด (ใกล้ Goal ที่สุด)
+        if (currentPos.startsWith('space-')) {
+            const currentSpaceIndex = parseInt(currentPos.split('-')[1]);
+            score += currentSpaceIndex; // ยิ่งเดินไกล ยิ่งคะแนนสูง
+        }
+        
+        // ******* END AI STRATEGY *******
+        
+        if (score > bestScore) {
+            bestScore = score;
+            bestMarble = marble;
+        }
+    });
+    
+    // ถ้าไม่พบการเคลื่อนไหวที่ดีกว่า ให้เลือกหมากตัวแรก
+    return bestMarble || possibleMoves[0]; 
+}
+
+
+// ----------------------------------------------------------
+// 4. INITIALIZATION
+// ----------------------------------------------------------
+
+createBoard(); 
+diceButton.addEventListener('click', rollDice);
