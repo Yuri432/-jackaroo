@@ -1,1 +1,34 @@
+/* เพิ่มส่วนนี้เข้าไปใน style.css */
 
+#game-board {
+    /* ใช้ Absolute Positioning เพื่อควบคุมตำแหน่งช่องเดิน */
+    position: relative; 
+    margin: 50px auto;
+    width: 600px; 
+    height: 600px;
+    border: 5px solid #333; /* ขอบกระดาน */
+    background-color: #e0e0e0;
+}
+
+.board-space {
+    position: absolute; /* ทุกช่องจะถูกจัดตำแหน่งแบบอิสระ */
+    width: 30px;
+    height: 30px;
+    background-color: white;
+    border: 1px solid #666;
+    border-radius: 50%; /* ทำให้เป็นวงกลมเหมือนช่องใส่หมาก */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 10px;
+    line-height: 1;
+}
+
+/* *** TODO: โค้ดต่อไปนี้เป็นตัวอย่างการจัดตำแหน่งแบบ Manual 
+   *** คุณอาจต้องใช้เทคนิคทางคณิตศาสตร์ (เช่น ตรีโกณมิติ) 
+   *** เพื่อวางช่องเดิน 52 ช่องให้เป็นวงกลมที่สมบูรณ์ 
+*/
+#space-0 { top: 0; left: 285px; background-color: lightgreen; } 
+#space-1 { top: 10px; left: 200px; }
+#space-2 { top: 50px; left: 150px; }
+/* ... (ต้องกำหนดตำแหน่ง 52 ช่องเอง) ... */
