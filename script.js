@@ -213,5 +213,138 @@ function createBoard() {
 
 // ... (โค้ดส่วน Roll Dice และ Switch Player ยังคงเดิม) ...
 }
+// ... (โค้ดเดิมด้านบน) ...
 
+let currentRoll = 0; // ตัวแปรสำหรับเก็บผลลูกเต๋า
+
+// ฟังก์ชันทอยลูกเต๋า
+function rollDice() {
+    // ปิดปุ่มทอยลูกเต๋าชั่วคราวเพื่อรอการเดินหมาก
+    diceButton.disabled = true; 
+    
+    // ลูกเต๋า Jackaroo มักใช้ 6 หน้า
+    currentRoll = Math.floor(Math.random() * 6) + 1; 
+    
+    rollResult.textContent = `Dice Roll: ${currentRoll}`;
+    
+    // -----------------------------------------------------------------
+    // **ตรรกะสำคัญ:** อนุญาตให้ผู้เล่นเลือกหมากที่สามารถเดินได้
+    // -----------------------------------------------------------------
+    
+    // หากทอยได้ 1 หรือ 6: อนุญาตให้นำหมากออกจากรังได้
+    const canMove = highlightPossibleMoves(currentRoll, currentPlayer);
+    
+    if (!canMove) {
+        // หากเดินไม่ได้เลย (เช่น ทอย 5 แต่หมากทั้งหมดอยู่ในรัง)
+        rollResult.textContent += " - No moves possible, switching player.";
+        setTimeout(() => {
+            switchPlayer();
+            diceButton.disabled = false; // เปิดปุ่มอีกครั้ง
+        }, 1500); 
+    }
+}
+
+// ... (โค้ดส่วน switchPlayer() ยังคงเดิม) ...
+
+// -----------------------------------------------------------------
+// ฟังก์ชันใหม่: ตรวจสอบและไฮไลต์หมากที่สามารถเดินได้
+// -----------------------------------------------------------------
+function highlightPossibleMoves(roll, color) {
+    let hasMove = false;
+    const playerMarbles = document.querySelectorAll(`.marble-${color.toLowerCase()}`);
+    
+    playerMarbles.forEach(marble => {
+        const currentPos = marble.getAttribute('data-position');
+        let isMoveValid = false;
+        
+        // 1. ตรวจสอบการออกจากรัง (Home Base)
+        if (currentPos.startsWith('home-') && (roll === 1 || roll === 6)) {
+            isMoveValid = true;
+        } 
+        // 2. ตรวจสอบการเดินบนกระดาน (Board Space)
+        else if (currentPos.startsWith('space-')) {
+            // **TODO:** เพิ่มตรรกะการตรวจสอบขอบเขต (ไม่ให้เดินเกิน 52 ช่อง)
+            // **TODO:** เพิ่มตรรกะการตรวจสอบการกิน/เดินทับหมากฝ่ายเดียวกัน
+            isMoveValid = true; // สมมติว่าเดินได้เสมอ
+        }
+        
+        // 3. ตรวจสอบการเข้า Safety Zone/Goal
+        // **TODO:** เพิ่มตรรกะการคำนวณระยะทางเข้า Safety Zone
+        
+        if (isMoveValid) {
+            marble.classList.add('can-move'); // เพิ่มคลาสไฮไลต์
+            marble.addEventListener('click', handleMarbleClick); // ผูก Event
+            hasMove = true;
+        }
+    });
+
+    return hasMove;
+}
+
+
+// -----------------------------------------------------------------
+// ฟังก์ชันใหม่: จัดการเมื่อผู้เล่นคลิกที่หมากที่ไฮไลต์
+// -----------------------------------------------------------------
+function handleMarbleClick(event) {
+    const marble = event.currentTarget;
+    const color = marble.getAttribute('data-color');
+    const roll = currentRoll;
+    
+    // 1. ลบ Event Listener และไฮไลต์ออกจากหมากทั้งหมด
+    document.querySelectorAll('.marble').forEach(m => {
+        m.classList.remove('can-move');
+        m.removeEventListener('click', handleMarbleClick);
+    });
+
+    // 2. ย้ายหมาก
+    moveMarble(marble, roll);
+    
+    // 3. เตรียมพร้อมสำหรับผู้เล่นคนถัดไป
+    setTimeout(() => {
+        switchPlayer();
+        diceButton.disabled = false; // เปิดปุ่มทอยลูกเต๋า
+    }, 500);
+}
+
+
+// -----------------------------------------------------------------
+// ฟังก์ชันใหม่: ย้ายหมากจริง (Core Movement)
+// -----------------------------------------------------------------
+function moveMarble(marble, roll) {
+    const currentPos = marble.getAttribute('data-position');
+    const color = marble.getAttribute('data-color');
+    
+    // หาตำแหน่งเริ่มต้นบนกระดาน (สำหรับแต่ละสี)
+    const startPositions = { 'red': 0, 'blue': 13, 'green': 26, 'yellow': 39 };
+    const startSpaceId = `space-${startPositions[color]}`;
+
+    let newPositionId;
+
+    if (currentPos.startsWith('home-')) {
+        // A. ถ้าหมากอยู่ในรังและทอยได้ 1 หรือ 6 -> ย้ายไปที่ช่องเริ่มต้น
+        newPositionId = startSpaceId;
+    } else if (currentPos.startsWith('space-')) {
+        // B. ถ้าหมากอยู่บนกระดาน -> คำนวณตำแหน่งใหม่
+        const currentSpaceIndex = parseInt(currentPos.split('-')[1]);
+        let newIndex = (currentSpaceIndex + roll) % totalSpaces;
+        
+        // **TODO:** เพิ่มการตรวจสอบกรณีเดินเข้า Safety Zone (ถ้าเดินเลยช่องเข้าบ้านไป)
+        
+        newPositionId = `space-${newIndex}`;
+        
+        // **TODO:** ตรวจสอบการกิน (Jumping) - ถ้าช่องใหม่มีหมากฝ่ายตรงข้าม
+    }
+    
+    // 3. ดำเนินการย้ายหมาก
+    if (newPositionId) {
+        const newSpace = document.getElementById(newPositionId);
+        
+        // 4. กินหมาก (ถ้ามีหมากฝ่ายตรงข้ามในช่องใหม่)
+        // **TODO:** นำหมากฝ่ายตรงข้ามกลับไปรัง
+        
+        // 5. ย้ายหมากจริง
+        newSpace.appendChild(marble);
+        marble.setAttribute('data-position', newPositionId);
+    }
+}
 // ... (โค้ดส่วน Roll Dice และ Switch Player ยังคงเดิม) ...
