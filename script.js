@@ -148,6 +148,70 @@ function createBoard() {
     
     // --- เพิ่มส่วนนี้: เรียกฟังก์ชันสร้างรังและปลอดภัย ---
     createHomesAndSafetyZones();
+    // ... (โค้ดเดิมด้านบน) ...
+
+const PLAYER_COLORS = ['Red', 'Blue']; // สำหรับตอนนี้ เราใช้แค่ Red และ Blue ก่อน
+// หากต้องการ 4 ผู้เล่น: const PLAYER_COLORS = ['Red', 'Blue', 'Green', 'Yellow'];
+
+// ----------------------------------------------------------
+// เพิ่มฟังก์ชันสำหรับสร้างหมาก (Marbles)
+// ----------------------------------------------------------
+
+function createMarbles() {
+    PLAYER_COLORS.forEach(color => {
+        const lowerColor = color.toLowerCase();
+        
+        // สร้างหมาก 4 ตัวสำหรับผู้เล่นแต่ละสี
+        for (let i = 0; i < 4; i++) {
+            const marble = document.createElement('div');
+            marble.classList.add('marble', `marble-${lowerColor}`);
+            marble.id = `marble-${lowerColor}-${i}`;
+            marble.setAttribute('data-color', lowerColor);
+            marble.setAttribute('data-position', `home-${lowerColor}-${i}`); // ตำแหน่งเริ่มต้นคือในรัง
+            
+            // เพิ่มหมากลงในรังที่สร้างไว้ก่อนหน้านี้
+            const homeSpace = document.getElementById(`home-${lowerColor}-${i}`);
+            if (homeSpace) {
+                homeSpace.appendChild(marble);
+            }
+            // *** NOTE: หมากจะถูกย้ายจากรังไปที่ช่องเริ่มต้น (Start Space) เมื่อเกมเริ่ม ***
+        }
+    });
+}
+
+// ----------------------------------------------------------
+// แก้ไขฟังก์ชัน createHomesAndSafetyZones()
+// ----------------------------------------------------------
+
+function createHomesAndSafetyZones() {
+    const homeContainer = document.getElementById('game-board');
+
+    // ... (โค้ดเดิมสำหรับสร้างรัง 4 ช่อง และ Safety Zone 5 ช่อง) ...
+    // *** โค้ดส่วนนี้ยังคงเดิม ***
+
+    // 3. สร้างจุดจบ (Finish/Goal)
+    const goal = document.createElement('div');
+    goal.id = 'game-goal';
+    goal.textContent = 'GOAL';
+    homeContainer.appendChild(goal);
+}
+
+// ----------------------------------------------------------
+// แก้ไขฟังก์ชัน createBoard() เพื่อเรียกใช้ createMarbles()
+// ----------------------------------------------------------
+
+function createBoard() {
+    gameBoard.innerHTML = ''; 
+    
+    // ... (โค้ดเดิมสำหรับสร้าง 52 ช่องวงกลม) ...
+    
+    createHomesAndSafetyZones();
+    
+    // --- เพิ่มส่วนนี้: เรียกฟังก์ชันสร้างหมาก ---
+    createMarbles();
+}
+
+// ... (โค้ดส่วน Roll Dice และ Switch Player ยังคงเดิม) ...
 }
 
 // ... (โค้ดส่วน Roll Dice และ Switch Player ยังคงเดิม) ...
