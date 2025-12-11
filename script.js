@@ -26,7 +26,7 @@ const START_POSITIONS = {
 
 
 // ----------------------------------------------------------
-// 1. BOARD SETUP FUNCTIONS ( unchanged from last full version )
+// 1. BOARD SETUP FUNCTIONS
 // ----------------------------------------------------------
 
 function createHomesAndSafetyZones() {
@@ -35,6 +35,7 @@ function createHomesAndSafetyZones() {
     PLAYER_COLORS.forEach(color => {
         const lowerColor = color.toLowerCase();
         
+        // 1. สร้างรัง (Home Base) 4 ช่อง
         for (let i = 0; i < 4; i++) {
             const homeSpace = document.createElement('div');
             homeSpace.classList.add('home-space', `home-${lowerColor}`);
@@ -42,6 +43,7 @@ function createHomesAndSafetyZones() {
             homeContainer.appendChild(homeSpace);
         }
 
+        // 2. สร้างเส้นทางปลอดภัย (Safety Zone) 5 ช่อง
         for (let i = 0; i < 5; i++) {
             const safetySpace = document.createElement('div');
             safetySpace.classList.add('safety-space', `safety-${lowerColor}`);
@@ -51,6 +53,7 @@ function createHomesAndSafetyZones() {
         }
     });
 
+    // 3. สร้างจุดจบ (Finish/Goal)
     const goal = document.createElement('div');
     goal.id = 'game-goal';
     goal.textContent = 'GOAL';
@@ -198,14 +201,22 @@ function moveMarble(marble, roll) {
         const finalTargetIndex = currentSpaceIndex + roll;
 
         // ** 1. ตรวจสอบการเข้า Safety Zone **
-        const entranceIndex = (startSpaceIndex - 1 + totalSpaces) % totalSpaces;
         
         // ตรวจสอบว่าหมากเดินข้าม/ถึงช่องเริ่มต้นของตัวเอง (Start Space) หรือไม่
-        const passedStart = (currentSpaceIndex < startSpaceIndex && finalTargetIndex >= startSpaceIndex) || (startSpaceIndex === 0 && currentSpaceIndex > entranceIndex && finalTargetIndex >= totalSpaces);
+        // ตรรกะนี้จัดการการข้ามช่องเริ่มต้นของตัวเองเพื่อเข้า Safety Zone
+        const passedStart = (currentSpaceIndex < startSpaceIndex && finalTargetIndex >= startSpaceIndex) || (startSpaceIndex === 0 && finalTargetIndex >= totalSpaces);
         
         if (passedStart) {
             // หมากเดินครบหนึ่งรอบและกำลังจะเข้า Safety Zone
-            const rollIntoSafety = finalTargetIndex - startSpaceIndex; 
+            const distancePastStart = finalTargetIndex - startSpaceIndex;
+            let rollIntoSafety;
+            
+            if (distancePastStart >= totalSpaces) {
+                // กรณี Start=0 และเดินเกิน 52
+                rollIntoSafety = finalTargetIndex - totalSpaces;
+            } else {
+                 rollIntoSafety = distancePastStart;
+            }
             
             if (rollIntoSafety >= 0 && rollIntoSafety < 5) {
                  // เข้า Safety Zone ช่อง rollIntoSafety (0-4)
@@ -289,8 +300,7 @@ function highlightPossibleMoves(roll, color) {
     const playerMarbles = document.querySelectorAll(`.marble-${color.toLowerCase()}`);
     
     playerMarbles.forEach(marble => {
-        // ตรรกะการตรวจสอบความถูกต้องอย่างง่าย (ใช้ moveMarble() เป็นตัวตรวจสอบจริง)
-        // เพื่อไม่ให้โค้ดยุ่งยากเกินไป เราจะให้ผู้ใช้คลิกก่อนแล้ว moveMarble จะยืนยันอีกครั้ง
+        // เพื่อความง่าย เราอนุญาตให้คลิกได้ ถ้าไม่ใช่หมากในบ้านแต่ Roll ไม่ได้ 1/6
         
         marble.classList.add('can-move');
         marble.addEventListener('click', handleMarbleClick);
@@ -356,9 +366,8 @@ function getAIMoves(roll, color) {
     const playerMarbles = document.querySelectorAll(`.marble-${color}`);
     
     playerMarbles.forEach(marble => {
-        // AI จะลองใช้ moveMarble() เพื่อตรวจสอบว่าเดินได้จริงหรือไม่
         if (marble.getAttribute('data-position').startsWith('home-') && (roll !== 1 && roll !== 6)) {
-            // หมากในบ้านแต่ทอยไม่ได้ 1 หรือ 6 - ไม่ต้องทำอะไร
+            // หมากในบ้านแต่ทอยไม่ได้ 1 หรือ 6 - ไม่สามารถเดินได้
         } else {
             validMarbles.push(marble);
         }
@@ -399,7 +408,11 @@ function selectBestAIMarble(possibleMoves) {
             score += currentSpaceIndex;
         }
         
-        // 4. Priority 4: พยายามกินหมาก (ถ้าตรวจสอบได้) - โค้ดนี้ไม่รวมตรรกะการตรวจสอบการกินล่วงหน้า
+        // 4. Priority 4: พยายามเดินใน Safety Zone
+        if (currentPos.startsWith('safety-')) {
+            const currentSafetyIndex = parseInt(currentPos.split('-')[2]);
+            score += 200 + currentSafetyIndex;
+        }
         
         if (score > bestScore) {
             bestScore = score;
