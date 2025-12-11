@@ -1,5 +1,5 @@
 /* ==========================================================
-   JACKAROO GAME STYLES (style.css)
+   JACKAROO GAME STYLES (style.css) - FINAL VERSION
    ========================================================== */
 
 body {
@@ -12,86 +12,50 @@ h1 {
     color: #333;
 }
 
+/* --------------------
+   กระดานหลัก
+   -------------------- */
 #game-board {
-    /* ใช้ Absolute Positioning เพื่อควบคุมตำแหน่งช่องเดิน */
     position: relative; 
     margin: 50px auto;
     width: 600px; 
     height: 600px;
-    border: 10px solid #222; /* ขอบกระดาน */
-    border-radius: 50%; /* ทำให้กระดานเป็นวงกลม */
+    border: 10px solid #222; 
+    border-radius: 50%; 
     background-color: #d1b490; /* สีไม้/พื้นกระดาน */
 }
 
+/* --------------------
+   ช่องเดินหลัก 52 ช่อง
+   -------------------- */
 .board-space {
-    position: absolute; /* ทุกช่องจะถูกจัดตำแหน่งแบบอิสระ */
+    position: absolute; 
     width: 30px;
     height: 30px;
     background-color: white;
     border: 2px solid #666;
-    border-radius: 50%; /* ทำให้เป็นวงกลมเหมือนช่องใส่หมาก */
+    border-radius: 50%; 
     display: flex;
     justify-content: center;
     align-items: center;
     font-size: 10px;
     font-weight: bold;
     color: #444;
-    cursor: pointer; /* แสดงว่าสามารถคลิกได้ */
+    cursor: pointer; 
+    z-index: 5;
 }
 
 /* --------------------
-   สไตล์สำหรับช่องเริ่มต้น (Start Spaces)
+   ช่องเริ่มต้น (Start Spaces)
    -------------------- */
-.start-red {
-    background-color: #ff0000; /* แดง */
-    border-color: #a00;
-    color: white;
-}
+.start-red { background-color: #ff0000; border-color: #a00; color: white; }
+.start-blue { background-color: #0000ff; border-color: #00a; color: white; }
+.start-green { background-color: #008000; border-color: #060; color: white; }
+.start-yellow { background-color: #ffff00; border-color: #aa0; }
 
-.start-blue {
-    background-color: #0000ff; /* น้ำเงิน */
-    border-color: #00a;
-    color: white;
-}
-
-/* เพิ่มสีอื่นถ้าต้องการรองรับ 3-4 ผู้เล่น */
-.start-green {
-    background-color: #008000; /* เขียว */
-    border-color: #060;
-    color: white;
-}
-
-.start-yellow {
-    background-color: #ffff00; /* เหลือง */
-    border-color: #aa0;
-}
 
 /* --------------------
-   สไตล์ส่วนควบคุม
-   -------------------- */
-#controls {
-    margin-top: 20px;
-}
-
-#dice-button {
-    padding: 10px 20px;
-    font-size: 18px;
-    cursor: pointer;
-    background-color: #4CAF50;
-    color: white;
-    border: none;
-    border-radius: 5px;
-}
-
-#current-player, #roll-result {
-    font-size: 1.2em;
-    margin: 10px 0;
-   /* ==========================================================
-   สไตล์สำหรับ Home Base (รัง) และ Safety Zone (เส้นทางปลอดภัย)
-   ========================================================== */
-
-/* --------------------
-   สไตล์ทั่วไปสำหรับรังและปลอดภัย
+   Home Base (รัง) และ Safety Zone (เส้นทางปลอดภัย)
    -------------------- */
 .home-space, .safety-space {
     position: absolute;
@@ -104,10 +68,11 @@ h1 {
     align-items: center;
     font-size: 0.8em;
     color: #333;
+    background-color: rgba(200, 200, 200, 0.5); /* พื้นหลังจางๆ */
 }
 
 /* --------------------
-   สไตล์สำหรับ Goal (จุดจบ)
+   Goal (จุดจบ)
    -------------------- */
 #game-goal {
     position: absolute;
@@ -124,83 +89,54 @@ h1 {
     align-items: center;
     font-size: 1.5em;
     font-weight: bold;
-    z-index: 10; /* ให้ Goal อยู่ด้านหน้า */
+    z-index: 10;
 }
 
-
 /* --------------------
-   การจัดวางตำแหน่ง (ต้องกำหนดตำแหน่งด้วยมือ หรือใช้ Flexbox/Grid ภายในวงกลม)
-   *** นี่คือตัวอย่างการจัดวางรังและปลอดภัยสำหรับ 'Red' (ด้านขวาของกระดาน) ***
+   Marbles (หมาก)
    -------------------- */
-
-/* ตำแหน่งรัง Red (Home Base) - แถว 2x2 */
-.home-red:nth-child(53) { top: 200px; left: 450px; }
-.home-red:nth-child(54) { top: 200px; left: 490px; }
-.home-red:nth-child(55) { top: 240px; left: 450px; }
-.home-red:nth-child(56) { top: 240px; left: 490px; }
-
-.home-red { background-color: rgba(255, 0, 0, 0.2); }
-
-/* ตำแหน่งปลอดภัย Red (Safety Zone) - เส้นตรงเข้าสู่ Goal */
-.safety-red { background-color: rgba(255, 0, 0, 0.4); border-color: red; }
-.safety-red:nth-child(57) { top: 50%; right: 100px; transform: translateY(-50%); } /* ช่อง 1 */
-.safety-red:nth-child(58) { top: 50%; right: 140px; transform: translateY(-50%); } /* ช่อง 2 */
-.safety-red:nth-child(59) { top: 50%; right: 180px; transform: translateY(-50%); } /* ช่อง 3 */
-.safety-red:nth-child(60) { top: 50%; right: 220px; transform: translateY(-50%); } /* ช่อง 4 */
-.safety-red:nth-child(61) { top: 50%; right: 260px; transform: translateY(-50%); } /* ช่อง 5 */
-
-
-/* *** TODO: ต้องทำซ้ำการจัดวางตำแหน่งนี้สำหรับสี Blue, Green, Yellow ด้วย! *** */
-   /* ==========================================================
-   สไตล์สำหรับ Marbles (หมาก)
-   ========================================================== */
-
 .marble {
     width: 25px;
     height: 25px;
     border-radius: 50%;
     border: 2px solid #333;
     cursor: pointer;
-    box-shadow: 1px 1px 3px rgba(0, 0, 0, 0.5); /* เพิ่มมิติ */
+    box-shadow: 1px 1px 3px rgba(0, 0, 0, 0.5); 
 }
 
-/* สไตล์สีสำหรับหมากแต่ละผู้เล่น */
-.marble-red {
-    background-color: #ff3333;
-    border-color: #cc0000;
-}
+.marble-red { background-color: #ff3333; border-color: #cc0000; }
+.marble-blue { background-color: #3333ff; border-color: #0000cc; }
+.marble-green { background-color: #33cc33; border-color: #009900; }
+.marble-yellow { background-color: #ffcc33; border-color: #cc9900; }
 
-.marble-blue {
-    background-color: #3333ff;
-    border-color: #0000cc;
-}
-
-/* เพิ่มสีอื่นถ้าใช้ 4 ผู้เล่น */
-.marble-green {
-    background-color: #33cc33;
-    border-color: #009900;
-}
-
-.marble-yellow {
-    background-color: #ffcc33;
-    border-color: #cc9900;
-}
-
-/* จัดให้หมากอยู่ตรงกลางรัง */
-.home-space {
-    /* ... (โค้ดเดิม) ... */
-    display: flex; /* เปิดใช้งาน flexbox */
-    justify-content: center;
-    align-items: center;
-   /* ==========================================================
-   สไตล์สำหรับ Game Logic (Highlighting)
-   ========================================================== */
-
-/* ไฮไลต์หมากที่สามารถเดินได้ */
+/* --------------------
+   Game Logic Styles
+   -------------------- */
 .marble.can-move {
     box-shadow: 0 0 15px 5px #00ff00; /* เรืองแสงสีเขียว */
-    transform: scale(1.1); /* ขยายเล็กน้อย */
+    transform: scale(1.1); 
     transition: transform 0.2s;
 }
+
+/* --------------------
+   Control Styles
+   -------------------- */
+#controls {
+    margin-top: 20px;
 }
+
+#dice-button {
+    padding: 10px 20px;
+    font-size: 18px;
+    cursor: pointer;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 5px;
 }
+
+/* ******************************************************
+   *** NOTE: โค้ดนี้ยังไม่รวมการจัดวางตำแหน่ง Home/Safety สำหรับทุกสี
+   *** เนื่องจากต้องใช้ CSS ที่ซับซ้อนในการกำหนดพิกัด 
+   *** แต่โครงสร้างพื้นฐานสำหรับเกมใช้งานได้แล้ว
+   ****************************************************** */
