@@ -151,4 +151,46 @@ h1 {
 
 
 /* *** TODO: ต้องทำซ้ำการจัดวางตำแหน่งนี้สำหรับสี Blue, Green, Yellow ด้วย! *** */
+   /* ==========================================================
+   สไตล์สำหรับ Marbles (หมาก)
+   ========================================================== */
+
+.marble {
+    width: 25px;
+    height: 25px;
+    border-radius: 50%;
+    border: 2px solid #333;
+    cursor: pointer;
+    box-shadow: 1px 1px 3px rgba(0, 0, 0, 0.5); /* เพิ่มมิติ */
+}
+
+/* สไตล์สีสำหรับหมากแต่ละผู้เล่น */
+.marble-red {
+    background-color: #ff3333;
+    border-color: #cc0000;
+}
+
+.marble-blue {
+    background-color: #3333ff;
+    border-color: #0000cc;
+}
+
+/* เพิ่มสีอื่นถ้าใช้ 4 ผู้เล่น */
+.marble-green {
+    background-color: #33cc33;
+    border-color: #009900;
+}
+
+.marble-yellow {
+    background-color: #ffcc33;
+    border-color: #cc9900;
+}
+
+/* จัดให้หมากอยู่ตรงกลางรัง */
+.home-space {
+    /* ... (โค้ดเดิม) ... */
+    display: flex; /* เปิดใช้งาน flexbox */
+    justify-content: center;
+    align-items: center;
+}
 }
