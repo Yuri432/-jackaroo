@@ -1,5 +1,5 @@
 // ==========================================================
-// JACKAROO GAME LOGIC (script.js) - FINAL VERSION with 4 Players and Enhanced Basic AI
+// JACKAROO GAME LOGIC (script.js) - MASTER COPY 
 // ==========================================================
 
 const gameBoard = document.getElementById('game-board');
@@ -10,9 +10,8 @@ const currentPlayerDisplay = document.getElementById('current-player');
 const totalSpaces = 52; 
 const boardRadius = 250; 
 const centerOffset = 300; 
-// *** CHANGED: Added Green and Yellow for 4-Player Structure ***
 const PLAYER_COLORS = ['Red', 'Blue', 'Green', 'Yellow']; 
-const AI_PLAYER = 'Blue'; // AI still controls only Blue for simplicity
+const AI_PLAYER = 'Blue'; 
 
 let currentPlayer = 'Red';
 let currentRoll = 0;
@@ -297,7 +296,6 @@ function highlightPossibleMoves(roll, color) {
     const playerMarbles = document.querySelectorAll(`.marble-${color.toLowerCase()}`);
     
     playerMarbles.forEach(marble => {
-        // Simple highlight (moveMarble() handles actual validity)
         marble.classList.add('can-move');
         marble.addEventListener('click', handleMarbleClick);
         hasMove = true; 
@@ -348,7 +346,6 @@ function handleAIMove() {
         const bestMarble = selectBestAIMarble(possibleMarbles);
         
         setTimeout(() => {
-            // We must re-run moveMarble as the final validation
             moveMarble(bestMarble, currentRoll); 
             switchPlayer();
         }, 1000); 
