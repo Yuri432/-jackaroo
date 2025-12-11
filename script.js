@@ -1,5 +1,6 @@
 // ==========================================================
 // JACKAROO GAME LOGIC (script.js) - MASTER COPY 
+// (4 Players, Enhanced AI)
 // ==========================================================
 
 const gameBoard = document.getElementById('game-board');
