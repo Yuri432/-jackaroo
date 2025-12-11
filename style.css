@@ -192,5 +192,15 @@ h1 {
     display: flex; /* เปิดใช้งาน flexbox */
     justify-content: center;
     align-items: center;
+   /* ==========================================================
+   สไตล์สำหรับ Game Logic (Highlighting)
+   ========================================================== */
+
+/* ไฮไลต์หมากที่สามารถเดินได้ */
+.marble.can-move {
+    box-shadow: 0 0 15px 5px #00ff00; /* เรืองแสงสีเขียว */
+    transform: scale(1.1); /* ขยายเล็กน้อย */
+    transition: transform 0.2s;
+}
 }
 }
