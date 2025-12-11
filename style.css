@@ -1,4 +1,16 @@
-/* เพิ่มส่วนนี้เข้าไปใน style.css */
+/* ==========================================================
+   JACKAROO GAME STYLES (style.css)
+   ========================================================== */
+
+body {
+    font-family: Arial, sans-serif;
+    text-align: center;
+    background-color: #f4f4f9;
+}
+
+h1 {
+    color: #333;
+}
 
 #game-board {
     /* ใช้ Absolute Positioning เพื่อควบคุมตำแหน่งช่องเดิน */
@@ -6,8 +18,9 @@
     margin: 50px auto;
     width: 600px; 
     height: 600px;
-    border: 5px solid #333; /* ขอบกระดาน */
-    background-color: #e0e0e0;
+    border: 10px solid #222; /* ขอบกระดาน */
+    border-radius: 50%; /* ทำให้กระดานเป็นวงกลม */
+    background-color: #d1b490; /* สีไม้/พื้นกระดาน */
 }
 
 .board-space {
@@ -15,20 +28,62 @@
     width: 30px;
     height: 30px;
     background-color: white;
-    border: 1px solid #666;
+    border: 2px solid #666;
     border-radius: 50%; /* ทำให้เป็นวงกลมเหมือนช่องใส่หมาก */
     display: flex;
     justify-content: center;
     align-items: center;
     font-size: 10px;
-    line-height: 1;
+    font-weight: bold;
+    color: #444;
+    cursor: pointer; /* แสดงว่าสามารถคลิกได้ */
 }
 
-/* *** TODO: โค้ดต่อไปนี้เป็นตัวอย่างการจัดตำแหน่งแบบ Manual 
-   *** คุณอาจต้องใช้เทคนิคทางคณิตศาสตร์ (เช่น ตรีโกณมิติ) 
-   *** เพื่อวางช่องเดิน 52 ช่องให้เป็นวงกลมที่สมบูรณ์ 
-*/
-#space-0 { top: 0; left: 285px; background-color: lightgreen; } 
-#space-1 { top: 10px; left: 200px; }
-#space-2 { top: 50px; left: 150px; }
-/* ... (ต้องกำหนดตำแหน่ง 52 ช่องเอง) ... */
+/* --------------------
+   สไตล์สำหรับช่องเริ่มต้น (Start Spaces)
+   -------------------- */
+.start-red {
+    background-color: #ff0000; /* แดง */
+    border-color: #a00;
+    color: white;
+}
+
+.start-blue {
+    background-color: #0000ff; /* น้ำเงิน */
+    border-color: #00a;
+    color: white;
+}
+
+/* เพิ่มสีอื่นถ้าต้องการรองรับ 3-4 ผู้เล่น */
+.start-green {
+    background-color: #008000; /* เขียว */
+    border-color: #060;
+    color: white;
+}
+
+.start-yellow {
+    background-color: #ffff00; /* เหลือง */
+    border-color: #aa0;
+}
+
+/* --------------------
+   สไตล์ส่วนควบคุม
+   -------------------- */
+#controls {
+    margin-top: 20px;
+}
+
+#dice-button {
+    padding: 10px 20px;
+    font-size: 18px;
+    cursor: pointer;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 5px;
+}
+
+#current-player, #roll-result {
+    font-size: 1.2em;
+    margin: 10px 0;
+}
