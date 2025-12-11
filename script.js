@@ -86,3 +86,68 @@ createBoard();
 
 // ผูกฟังก์ชันกับปุ่ม
 diceButton.addEventListener('click', rollDice);
+// ... (โค้ดเดิมด้านบน) ...
+
+const PLAYER_COLORS = ['Red', 'Blue', 'Green', 'Yellow']; // กำหนดสีผู้เล่น
+
+// ฟังก์ชันสร้างรังและเส้นทางปลอดภัย
+function createHomesAndSafetyZones() {
+    const homeContainer = document.getElementById('game-board');
+
+    // ตำแหน่งเริ่มต้นสำหรับการวาง Home/Safety (ในหน่วยองศา)
+    // Red Start: 0 องศา, Blue Start: 90 องศา (โดยประมาณในวงกลม 4 ส่วน)
+    const startAngles = {
+        'Red': 0, // อยู่ที่ช่อง 0
+        'Blue': 90, // อยู่ที่ช่อง 13
+        // ถ้ามี 4 ผู้เล่น:
+        // 'Green': 180, // ช่อง 26
+        // 'Yellow': 270  // ช่อง 39
+    };
+    
+    // สร้าง Home Base (รัง) และ Safety Zone (5 ช่อง) สำหรับแต่ละสี
+    PLAYER_COLORS.forEach(color => {
+        // 1. สร้างรัง (Home Base) 4 ช่อง
+        for (let i = 0; i < 4; i++) {
+            const homeSpace = document.createElement('div');
+            homeSpace.classList.add('home-space', `home-${color.toLowerCase()}`);
+            homeSpace.id = `home-${color.toLowerCase()}-${i}`;
+            // กำหนดตำแหน่งรังที่อยู่ด้านในกระดานวงกลม (ใช้ CSS จัดวาง)
+            homeContainer.appendChild(homeSpace);
+        }
+
+        // 2. สร้างเส้นทางปลอดภัย (Safety Zone) 5 ช่อง
+        for (let i = 0; i < 5; i++) {
+            const safetySpace = document.createElement('div');
+            safetySpace.classList.add('safety-space', `safety-${color.toLowerCase()}`);
+            safetySpace.id = `safety-${color.toLowerCase()}-${i}`;
+            
+            // เพิ่มเลขช่องปลอดภัย
+            safetySpace.textContent = `S${i+1}`; 
+            
+            homeContainer.appendChild(safetySpace);
+        }
+    });
+
+    // 3. สร้างจุดจบ (Finish/Goal)
+    const goal = document.createElement('div');
+    goal.id = 'game-goal';
+    goal.textContent = 'GOAL';
+    homeContainer.appendChild(goal);
+}
+
+// แก้ไขฟังก์ชัน createBoard() เดิม
+function createBoard() {
+    gameBoard.innerHTML = ''; 
+    
+    // ... (โค้ดเดิมสำหรับสร้าง 52 ช่องวงกลม) ...
+    // *** ไม่ต้องลบโค้ดนี้ ให้คงไว้ ***
+    
+    // คำนวณมุมที่แต่ละช่องเดินควรจะอยู่
+    const angleIncrement = (360 / totalSpaces) * (Math.PI / 180); 
+    // ... (โค้ดการสร้าง space) ...
+    
+    // --- เพิ่มส่วนนี้: เรียกฟังก์ชันสร้างรังและปลอดภัย ---
+    createHomesAndSafetyZones();
+}
+
+// ... (โค้ดส่วน Roll Dice และ Switch Player ยังคงเดิม) ...
