@@ -86,4 +86,69 @@ h1 {
 #current-player, #roll-result {
     font-size: 1.2em;
     margin: 10px 0;
+   /* ==========================================================
+   สไตล์สำหรับ Home Base (รัง) และ Safety Zone (เส้นทางปลอดภัย)
+   ========================================================== */
+
+/* --------------------
+   สไตล์ทั่วไปสำหรับรังและปลอดภัย
+   -------------------- */
+.home-space, .safety-space {
+    position: absolute;
+    width: 35px;
+    height: 35px;
+    border-radius: 50%;
+    border: 1px dashed #666;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 0.8em;
+    color: #333;
+}
+
+/* --------------------
+   สไตล์สำหรับ Goal (จุดจบ)
+   -------------------- */
+#game-goal {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 100px;
+    height: 100px;
+    background-color: #333;
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 1.5em;
+    font-weight: bold;
+    z-index: 10; /* ให้ Goal อยู่ด้านหน้า */
+}
+
+
+/* --------------------
+   การจัดวางตำแหน่ง (ต้องกำหนดตำแหน่งด้วยมือ หรือใช้ Flexbox/Grid ภายในวงกลม)
+   *** นี่คือตัวอย่างการจัดวางรังและปลอดภัยสำหรับ 'Red' (ด้านขวาของกระดาน) ***
+   -------------------- */
+
+/* ตำแหน่งรัง Red (Home Base) - แถว 2x2 */
+.home-red:nth-child(53) { top: 200px; left: 450px; }
+.home-red:nth-child(54) { top: 200px; left: 490px; }
+.home-red:nth-child(55) { top: 240px; left: 450px; }
+.home-red:nth-child(56) { top: 240px; left: 490px; }
+
+.home-red { background-color: rgba(255, 0, 0, 0.2); }
+
+/* ตำแหน่งปลอดภัย Red (Safety Zone) - เส้นตรงเข้าสู่ Goal */
+.safety-red { background-color: rgba(255, 0, 0, 0.4); border-color: red; }
+.safety-red:nth-child(57) { top: 50%; right: 100px; transform: translateY(-50%); } /* ช่อง 1 */
+.safety-red:nth-child(58) { top: 50%; right: 140px; transform: translateY(-50%); } /* ช่อง 2 */
+.safety-red:nth-child(59) { top: 50%; right: 180px; transform: translateY(-50%); } /* ช่อง 3 */
+.safety-red:nth-child(60) { top: 50%; right: 220px; transform: translateY(-50%); } /* ช่อง 4 */
+.safety-red:nth-child(61) { top: 50%; right: 260px; transform: translateY(-50%); } /* ช่อง 5 */
+
+
+/* *** TODO: ต้องทำซ้ำการจัดวางตำแหน่งนี้สำหรับสี Blue, Green, Yellow ด้วย! *** */
 }
